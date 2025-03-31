@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Details</title>
+    <style>
+        :root {
+            --bg-primary: #0f1229;
+            --bg-secondary: #1a1f3d;
+            --accent-color: #4ecdc4;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b7c6;
+            --card-bg: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+            width: 400px;
+            text-align: center;
+        }
+
+        .profile-picture {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 20px;
+            border: 3px solid var(--accent-color);
+        }
+
+        h1 {
+            color: var(--accent-color);
+            margin-bottom: 20px;
+        }
+
+        .employee-details {
+            text-align: left;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .detail {
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+            text-align: left;
+        }
+
+        .actions {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .actions a {
+            color: var(--accent-color);
+            text-decoration: none;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.3s ease;
+        }
+
+        .actions a:hover {
+            color: #3ab3ac;
+        }
+
+        .no-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background-color: var(--card-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 20px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Employee Details</h1>
+        
+        {% if emp.profile_picture %}
+            <img src="{{ emp.profile_picture.url }}" alt="{{ emp.name }}'s profile picture" class="profile-picture">
+        {% else %}
+            <div class="no-image">No Image</div>
+        {% endif %}
+        
+        <div class="employee-details">
+            <div class="detail"><strong>Name:</strong> {{ emp.name }}</div>
+            <div class="detail"><strong>Email:</strong> {{ emp.email }}</div>
+            <div class="detail"><strong>Phone Number:</strong> {{ emp.phone_number }}</div>
+            <div class="detail"><strong>Designation:</strong> {{ emp.designation }}</div>
+            <div class="detail"><strong>Authorized:</strong> {% if emp.is_active %} Yes {% else %} No {% endif %}</div>
+        </div>
+        <div class="actions">
+            <a href="{% url 'employee-list' %}">Back to List</a>
+            <a href="{% url 'emp-authorize' pk=emp.pk %}">Authorize</a>
+            <a href="{% url 'emp-delete' pk=emp.pk %}">Delete</a>
+        </div>
+    </div>
+</body>
+</html>

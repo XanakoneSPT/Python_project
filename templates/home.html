@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Employee Attendance System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0f1229;
+            --bg-secondary: #1a1f3d;
+            --accent-color: #4ecdc4;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b7c6;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --sidebar-width: 280px;
+            --collapsed-sidebar-width: 80px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Arial', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--bg-secondary);
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 10px 0 15px -5px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            transition: width 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            width: var(--collapsed-sidebar-width);
+            overflow: hidden;
+        }
+
+        .sidebar.collapsed .sidebar-menu a span {
+            display: none;
+        }
+
+        .sidebar.collapsed .sidebar-logo h2 {
+            display: none;
+        }
+
+        .sidebar-toggle {
+            position: fixed;
+            top: 37px;
+            left: 25px;
+            background-color: transparent;
+            color: var(--accent-color);
+            border: 2px solid var(--accent-color);
+            padding: 10px 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 30;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-toggle:hover {
+            background-color: var(--accent-color);
+            color: var(--bg-primary);
+            transform: rotate(90deg);
+        }
+
+        .sidebar-toggle i {
+            font-size: 1.5em;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        .sidebar-logo h2 {
+            color: var(--accent-color);
+            font-size: 1.8em;
+            font-weight: 700;
+        }
+
+        .sidebar-menu {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 12px 20px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background-color: rgba(78, 205, 196, 0.1);
+            color: var(--accent-color);
+        }
+
+        .sidebar-menu a i {
+            margin-right: 15px;
+            font-size: 1.2em;
+            width: 25px;
+            text-align: center;
+        }
+
+        .sidebar.collapsed .sidebar-menu a span {
+            display: none;
+            opacity: 0;
+            width: 0;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-menu a {
+            justify-content: center;
+            padding: 15px 0;
+            margin-bottom: 10px;
+        }
+
+        .sidebar.collapsed .sidebar-menu a i {
+            margin-right: 0;
+        }
+
+        .sidebar.collapsed .sidebar-menu a:first-child {
+            padding-top: 30px;
+        }
+
+        .sidebar.collapsed .sidebar-menu a:first-child i {
+            padding-top: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex-grow: 1;
+            padding: 40px 40px 0px 40px;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #1a1f3d 100%);
+            position: relative;
+            margin-left: 0;
+            width: calc(100% - var(--sidebar-width));
+            transition: all 0.3s ease;
+        }
+
+        .main-content.sidebar-collapsed {
+            margin-left: 0;
+            width: calc(100% - var(--collapsed-sidebar-width));
+        }
+
+        /* Login Section */
+        .login-section {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            display: flex;
+            align-items: center;
+        }
+
+        .login-btn {
+            background-color: var(--accent-color);
+            color: var(--bg-primary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .login-btn:hover {
+            background-color: #3ab4ad;
+        }
+
+        .login-btn i {
+            margin-right: 8px;
+        }
+
+        .logged-in-user {
+            color: var(--text-secondary);
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .logged-in-user i {
+            margin-right: 8px;
+            color: var(--accent-color);
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            margin-left: 10px;
+            transition: color 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            color: var(--accent-color);
+        }
+        
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 100px;
+        }
+
+        .dashboard-header h1 {
+            font-size: 2.5em;
+            color: var(--accent-color);
+        }
+        
+        .hero-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 110px;
+            padding-top: 30px;
+            padding-bottom: 90px;
+        }
+
+        .hero-section h1 {
+            color: var(--accent-color);
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .hero-section p {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            width: 200px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(78, 205, 196, 0.1);
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .card a {
+            color: var(--accent-color);
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .card p {
+            color: var(--text-secondary);
+        }
+
+        /* Footer */
+        .dashboard-footer {
+            margin-top: auto;
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .dashboard-footer a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        /* Responsive Design */
+        @media screen and (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                position: fixed;
+                padding: 30px 20px;
+                top: 0;
+                left: 0;
+                height: 100%;
+                width: var(--sidebar-width);
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.collapsed {
+                transform: translateX(-100%);
+                width: var(--sidebar-width);
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .main-content.sidebar-collapsed {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .sidebar-toggle {
+                display: block;
+            }
+
+            .buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .card {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="sidebar-toggle" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-logo">
+                <h2>Dashboard</h2>
+            </div>
+            <div class="sidebar-menu">
+                <a href="{% url 'register_employee' %}"><i class="fas fa-user-plus"></i> <span>Employee Registration</span></a>
+                <a href="{% url 'employee-list' %}"><i class="fas fa-user-friends"></i> <span>View Employee</span></a>
+                <a href="{% url 'capture_and_recognize' %}"><i class="fas fa-camera"></i> <span>Mark Attendance</span></a>
+                <a href="{% url 'emp_attendance_list' %}"><i class="fas fa-list"></i> <span>Attendance Details</span></a>
+                <a href="{% url 'camera_config_list' %}"><i class="fas fa-cog"></i> <span>Camera Configuration</span></a>
+            </div>
+        </div>
+        
+        <div class="main-content" id="mainContent">
+            <!-- Login Section -->
+            <div class="login-section">
+                {% if user.is_authenticated %}
+                    <div class="logged-in-user">
+                        <i class="fas fa-user-circle"></i>
+                        {{ user.username }}
+                    </div>
+                    <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}" class="login-btn">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                {% endif %}
+            </div>
+
+            <div class="dashboard-header">
+                <h1>Face Based Employee Attendance System</h1>
+            </div>
+            <div class="hero-section">
+                <div class="buttons">
+                    <div class="card">
+                        <a href="{% url 'register_employee' %}"><i class="fas fa-user-plus"></i></a>
+                        <p>Register Employee</p>
+                    </div>
+                    <div class="card">
+                        <a href="{% url 'employee-list' %}"><i class="fas fa-user-friends"></i></a>
+                        <p>Authorize Employee</p>
+                    </div>
+                    <div class="card">
+                        <a href="{% url 'capture_and_recognize' %}"><i class="fas fa-camera"></i></a>
+                        <p>Mark Attendance</p>
+                    </div>
+                    <div class="card">
+                        <a href="{% url 'emp_attendance_list' %}"><i class="fas fa-list"></i></a>
+                        <p>View Attendance</p>
+                    </div>
+                    <div class="card">
+                        <a href="{% url 'camera_config_create' %}"><i class="fas fa-cog"></i></a>
+                        <p>Configure Camera</p>
+                    </div>
+                </div>
+            </div>
+            <!-- <div class="dashboard-footer">
+                <p>Developed by</p>
+                <p>2025</p>
+            </div> -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('sidebar-collapsed');
+            });
+        });
+    </script>
+</body>
+</html>

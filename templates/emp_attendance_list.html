@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Employee Attendance List</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0f1229;
+            --bg-secondary: #1a1f3d;
+            --accent-color: #4ecdc4;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b7c6;
+            --card-bg: rgba(255, 255, 255, 0.05);
+        }
+        
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px 0;
+        }
+        .container {
+            background-color: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            width: 95%;
+            max-width: 1200px;
+        }
+        .heading {
+            text-align: center;
+            color: var(--accent-color);
+            margin-bottom: 30px;
+        }
+        .filter-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .filter-container .input-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        .filter-container input,
+        .filter-container button {
+            height: 45px;
+        }
+        .table-responsive {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .table {
+            color: var(--text-primary);
+        }
+        .table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .table thead th {
+            background-color: var(--accent-color);
+            color: var(--bg-primary);
+            border: none;
+            vertical-align: middle;
+            text-align: center;
+        }
+        .table tbody tr {
+            background-color: var(--card-bg);
+            transition: background-color 0.3s ease;
+        }
+        .table tbody tr:hover {
+            background-color: rgba(78, 205, 196, 0.1);
+            color: white;
+        }
+        .table td {
+            vertical-align: middle;
+            text-align: center;
+            border-color: rgba(255,255,255,0.1);
+        }
+        .employee-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .btn-custom {
+            background-color: var(--accent-color);
+            color: var(--bg-primary);
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .btn-custom:hover {
+            background-color: #3bb9b3;
+            transform: translateY(-2px);
+        }
+        .footer {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .back-icon {
+            color: var(--accent-color);
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .back-icon:hover {
+            transform: scale(1.2);
+        }
+        @media (max-width: 768px) {
+            .filter-container {
+                flex-direction: column;
+            }
+            .filter-container .input-group {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2 class="heading">Employee Attendance Records</h2>
+    
+    <form method="get" class="filter-container">
+        <div class="input-group">
+            <input type="text" name="search" class="form-control" placeholder="Search for employees..." value="{{ search_query }}">
+            <div class="input-group-append">
+                <button class="btn btn-custom" type="submit"><i class="fas fa-search"></i> Search</button>
+            </div>
+        </div>
+        <div class="input-group">
+            <input type="date" name="attendance_date" class="form-control" value="{{ date_filter }}">
+            <div class="input-group-append">
+                <button class="btn btn-custom" type="submit"><i class="fas fa-calendar-alt"></i> Filter</button>
+            </div>
+        </div>
+        <div class="input-group">
+            <a href="?download_report=true&search={{ search_query }}&attendance_date={{ date_filter }}" class="btn btn-custom">
+                <i class="fas fa-download"></i> Download Report
+            </a>
+        </div>
+    </form>
+    
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>Emp Image</th>
+                    <th>Emp Name</th>
+                    <th>Emp ID</th>
+                    <th>Attendance Date</th>
+                    <th>Check-in Time</th>
+                    <th>Check-out Time</th>
+                    <th>Stayed Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in employee_attendance_data %}
+                    {% for attendance in data.attendance_records %}
+                    <tr>
+                        <td>
+                            {% if data.employee.profile_picture %}
+                                <img src="{{ data.employee.profile_picture.url }}" alt="{{ data.employee.name }}" class="employee-image">
+                            {% else %}
+                                <div class="text-muted">No Image</div>
+                            {% endif %}
+                        </td>
+                        <td>{{ data.employee.name }}</td>
+                        <td>{{ data.employee.employee_id }}</td>
+                        <td>{{ attendance.date }}</td>
+                        <td>
+                            {% if attendance.check_in_time %}
+                                {{ attendance.check_in_time|date:"h:i:s A" }}
+                            {% else %}
+                                <span class="text-warning">Not Checked In</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if attendance.check_out_time %}
+                                {{ attendance.check_out_time|date:"h:i:s A" }}
+                            {% else %}
+                                <span class="text-warning">Not Checked Out</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if attendance.check_in_time and attendance.check_out_time %}
+                                {{ attendance.calculate_duration }}
+                            {% else %}
+                                <span class="text-warning">Incomplete</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        <i class="fas fa-arrow-left back-icon" onclick="window.history.back()"></i>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

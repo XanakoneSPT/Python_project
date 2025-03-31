@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authorize Employee</title>
+    <style>
+        :root {
+            --bg-primary: #0f1229;
+            --bg-secondary: #1a1f3d;
+            --accent-color: #4ecdc4;
+            --accent-hover: #3ab3ac;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b7c6;
+            --card-bg: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            width: 420px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .employee-details {
+            text-align: left;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .detail {
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+        }
+
+        .form-group {
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .custom-checkbox {
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .custom-checkbox input {
+            display: none;
+        }
+
+        .checkmark {
+            width: 24px;
+            height: 24px;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .custom-checkbox:hover .checkmark {
+            background-color: rgba(255,255,255,0.2);
+        }
+
+        .custom-checkbox input:checked + .checkmark {
+            background-color: var(--accent-color);
+        }
+
+        .checkmark::after {
+            content: "\2714";
+            color: white;
+            font-size: 16px;
+            display: none;
+        }
+
+        .custom-checkbox input:checked + .checkmark::after {
+            display: block;
+        }
+
+        .authorize-btn {
+            background-color: var(--accent-color);
+            color: var(--bg-primary);
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .authorize-btn:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .authorize-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .actions {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .actions a {
+            color: var(--accent-color);
+            text-decoration: none;
+            padding: 10px;
+            transition: color 0.3s ease;
+        }
+
+        .actions a:hover {
+            color: var(--accent-hover);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Authorize Employee</h1>
+        <div class="employee-details">
+            <div class="detail"><strong>Name:</strong> {{ emp.name }}</div>
+            <div class="detail"><strong>Email:</strong> {{ emp.email }}</div>
+            <div class="detail"><strong>Phone Number:</strong> {{ emp.phone_number }}</div>
+            <div class="detail"><strong>Designation:</strong> {{ emp.designation }}</div>
+            <div class="detail"><strong>Department:</strong> {{ emp.department }}</div>
+            <div class="detail"><strong>Authorized:</strong> {% if emp.authorized %} Yes {% else %} No {% endif %}</div>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="custom-checkbox">
+                    <input type="checkbox" id="authorized" name="authorized" {% if emp.is_active %} checked {% endif %}>
+                    <span class="checkmark"></span>Authorize Employee
+                </label>
+            </div>
+            <button type="submit" class="authorize-btn">Update Authorization</button>
+        </form>
+        <div class="actions">
+            <a href="{% url 'employee-list' %}">Back to List</a>
+            <a href="{% url 'emp-detail' pk=emp.pk %}">View Details</a>
+        </div>
+    </div>
+</body>
+</html>

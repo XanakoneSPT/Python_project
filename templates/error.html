@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Occurred</title>
+    <style>
+        :root {
+            --bg-primary: #0f1229;
+            --bg-secondary: #1a1f3d;
+            --accent-color: #4ecdc4;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b7c6;
+            --error-color: #ff6b6b;
+            --error-bg: #2d3250;
+        }
+
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .error-container {
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .error-icon {
+            font-size: 4rem;
+            color: var(--error-color);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--error-color);
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .error-message {
+            color: var(--text-secondary);
+            font-size: 1.1em;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: var(--bg-primary);
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 0 auto;
+        }
+
+        .btn:hover {
+            background-color: #3ab3ac;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .btn i {
+            margin-right: 8px;
+        }
+
+        .suggestion-box {
+            background-color: var(--error-bg);
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 25px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .suggestion-title {
+            color: var(--error-color);
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .suggestion-list {
+            list-style-type: none;
+            padding: 0;
+            text-align: left;
+        }
+
+        .suggestion-list li {
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .suggestion-list li::before {
+            content: '\2022';
+            color: var(--accent-color);
+            position: absolute;
+            left: 0;
+            font-size: 1.5em;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <h1>An Error Occurred</h1>
+        <p class="error-message">{{ error_message }}</p>
+        <a href="{% url 'home' %}" class="btn">
+            <i class="fas fa-home"></i>
+            Return to Home
+        </a>
+    </div>
+
+    <div class="suggestion-box">
+        <h2 class="suggestion-title">Suggested Fixes:</h2>
+        <ul class="suggestion-list">
+            <li>Ensure that the camera is connected properly.</li>
+            <li>Check the IP address and port settings in the camera configuration.</li>
+            <li>Make sure the camera is powered on and accessible from your network.</li>
+            <li>Verify that the required permissions are granted to access the camera.</li>
+            <li>Consult the camera's manual for troubleshooting steps.</li>
+        </ul>
+    </div>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee List</title>
+    <!-- Include necessary CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background-color: #121829;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+        }
+        .container {
+            margin-top: 50px;
+            max-width: 950px;
+            background: #1e2546;
+            padding: 30px;
+            border-radius: 1rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #4ecdc4;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #444;
+            padding: 12px;
+            text-align: center;
+        }
+        th {
+            background-color: #4ecdc4;
+            color: #0f1229;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+        .actions a {
+            display: inline-block;
+            padding: 6px 12px;
+            text-decoration: none;
+            color: #fff;
+            background-color: #4ecdc4;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        .actions a:hover {
+            background-color: #3bb9b3;
+            color: #0f1229;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-weight: bold;
+            color: #4ecdc4;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .footer i {
+            margin-right: 5px;
+        }
+        .footer:hover {
+            color: #3bb9b3;
+        }
+        /* Responsive Styles */
+        @media only screen and (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            table {
+                font-size: 14px;
+            }
+            th, td {
+                padding: 10px;
+            }
+            .actions a {
+                padding: 5px 10px;
+            }
+        }
+        @media only screen and (max-width: 600px) {
+            table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            h1 {
+                font-size: 18px;
+            }
+        }
+        /* Footer styles */
+        .footer {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            font-size: 20px;
+        }
+        @media only screen and (max-width: 480px) {
+            .footer {
+                font-size: 16px;
+                bottom: 10px;
+                left: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Employee List</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Role</th>
+                    <th>Department</th>
+                    <th>Active</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for emp in employees %}
+                <tr>
+                    <td>{{ emp.employee_id }}</td>
+                    <td>{{ emp.name }}</td>
+                    <td>{{ emp.email }}</td>
+                    <td>{{ emp.phone_number }}</td>
+                    <td>{{ emp.designation }}</td>
+                    <td>{{ emp.department }}</td>
+                    <td>{% if emp.is_active  %} Yes {% else %} No {% endif %}</td>
+                    <td class="actions">
+                        <a href="{% url 'emp-authorize' pk=emp.pk %}">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <!-- Back to home icon -->
+    <div class="footer" onclick="location.href='{% url 'home' %}'">
+        <i class="fas fa-home"></i> Back to Home
+    </div>
+</body>
+</html>

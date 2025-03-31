@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Employee Confirmation</title>
+    <style>
+        :root {
+            --bg-primary: #0f1229;
+            --bg-secondary: #1a1f3d;
+            --accent-color: #4ecdc4;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b7c6;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --danger-color: #ff6b6b;
+        }
+
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            background-color: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+            width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--danger-color);
+            margin-bottom: 20px;
+        }
+
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .actions a, .actions button {
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+            border: none;
+            font-family: 'Inter', Arial, sans-serif;
+            cursor: pointer;
+        }
+
+        .actions a {
+            background-color: var(--accent-color);
+            color: var(--bg-primary);
+        }
+
+        .actions button {
+            background-color: var(--danger-color);
+            color: var(--text-primary);
+        }
+
+        .actions a:hover, .actions button:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Delete Employee</h1>
+        <p>Are you sure you want to delete {{ emp.name }}?</p>
+        <div class="actions">
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit">Delete</button>
+                <a href="{% url 'emp-detail' emp.pk %}">Cancel</a>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
