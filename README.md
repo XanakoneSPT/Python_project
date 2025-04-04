@@ -85,13 +85,6 @@ Follow the prompts to create an admin user.
 python manage.py runserver
 ```
 
-
-
-### **Step 5: Run the Server Again**
-```sh
-python manage.py runserver
-```
-
 ### Or use this username and password for admin
 ```sh
 username: xana
