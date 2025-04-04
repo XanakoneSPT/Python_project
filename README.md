@@ -92,4 +92,10 @@ python manage.py runserver
 python manage.py runserver
 ```
 
+### Or use this username and password for admin
+```sh
+username: xana
+password: xana1234
+```
+
 Now your Django project should be set up correctly! 🚀
