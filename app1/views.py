@@ -145,6 +145,9 @@ def capture_and_recognize(request):
     camera_threads = []  # List to store threads for each camera
     camera_windows = []  # List to store window names
     error_messages = []  # List to capture errors from threads
+    
+    # Create a shared dictionary for status messages
+    status_messages = {}
 
     def process_frame(cam_config, stop_event):
         """Thread function to capture and process frames for each camera."""
@@ -160,6 +163,10 @@ def capture_and_recognize(request):
             if not cap.isOpened():
                 raise Exception(f"Unable to access camera {cam_config.name}.")
 
+            # Better resolution for accuracy but not full HD
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
+
             threshold = cam_config.threshold
 
             # Initialize pygame mixer for sound playback
@@ -168,56 +175,86 @@ def capture_and_recognize(request):
 
             window_name = f'Face Recognition - {cam_config.name}'
             camera_windows.append(window_name)  # Track the window name
-
+            
+            # Load known face encodings ONCE at the beginning
+            known_face_encodings, known_face_names = encode_uploaded_images()
+            
+            # Cache to prevent constant recalculation
+            face_locations_cache = None
+            face_encodings_cache = None
+            
+            # Variables for frame processing
+            frame_count = 0
+            skip_frames = 1  # Process more frames for better detection
+            recognition_cooldown = {}  # Track recognition cooldown
+            
             while not stop_event.is_set():
                 ret, frame = cap.read()
                 if not ret:
                     print(f"Failed to capture frame for camera: {cam_config.name}")
                     break  # If frame capture fails, break from the loop
 
-                # Convert BGR to RGB
-                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                test_face_encodings = detect_and_encode(frame_rgb)  # Function to detect and encode face in frame
-
-                if test_face_encodings:
-                    known_face_encodings, known_face_names = encode_uploaded_images()  # Load known face encodings once
-                    if known_face_encodings:
-                        names = recognize_faces(np.array(known_face_encodings), known_face_names, test_face_encodings, threshold)
-
-                        for name, box in zip(names, mtcnn.detect(frame_rgb)[0]):
+                frame_count += 1
+                process_this_frame = frame_count % skip_frames == 0
+                
+                # Slightly reduce size for processing - less reduction for better accuracy
+                if process_this_frame:
+                    # Use a factor of 0.75 instead of 0.5 for better detection
+                    process_frame = cv2.resize(frame, (0, 0), fx=0.75, fy=0.75)
+                    process_frame_rgb = cv2.cvtColor(process_frame, cv2.COLOR_BGR2RGB)
+                    
+                    # Detect and encode faces
+                    face_locations_cache = mtcnn.detect(process_frame_rgb)[0]
+                    if face_locations_cache is not None and len(face_locations_cache) > 0:
+                        face_encodings_cache = detect_and_encode(process_frame_rgb)
+                
+                # Process recognition if we have cached faces
+                current_time = now()
+                if face_locations_cache is not None and face_encodings_cache and len(face_encodings_cache) > 0:
+                    # Only do recognition if we have known faces to compare against
+                    if known_face_encodings and len(known_face_encodings) > 0:
+                        names = recognize_faces(np.array(known_face_encodings), known_face_names, face_encodings_cache, threshold)
+                        
+                        # Draw boxes and process recognition
+                        for i, (name, box) in enumerate(zip(names, face_locations_cache)):
                             if box is not None:
-                                (x1, y1, x2, y2) = map(int, box)
+                                # Scale coordinates to the original frame
+                                scale_factor = 1 / 0.75
+                                (x1, y1, x2, y2) = map(int, [coord * scale_factor for coord in box])
+                                
+                                # Draw rectangle around face
                                 cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                                cv2.putText(frame, name, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
-
+                                cv2.putText(frame, name, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2, cv2.LINE_AA)
+                                
+                                # Handle recognition for identified faces
                                 if name != 'Not Recognized':
-                                    employees = Employee.objects.filter(name=name)
-                                    if employees.exists():
-                                        employee = employees.first()
+                                    # Check cooldown to prevent too frequent recognitions
+                                    last_recognition = recognition_cooldown.get(name, None)
+                                    if last_recognition is None or (current_time - last_recognition).total_seconds() > 2:
+                                        recognition_cooldown[name] = current_time
+                                        
+                                        # Process attendance immediately for faster feedback
+                                        status = check_attendance_status(name, current_time, success_sound)
+                                        if status:
+                                            status_messages[name] = {
+                                                'message': status,
+                                                'time': current_time,
+                                                'color': (0, 255, 0) if 'checked in' in status or 'checked out' in status else (0, 0, 255)
+                                            }
+                
+                # Display status messages for recognized people
+                y_offset = 50
+                for name, status_info in list(status_messages.items()):
+                    # Only show messages for 5 seconds
+                    if (current_time - status_info['time']).total_seconds() < 5:
+                        cv2.putText(frame, f"{status_info['message']}", (50, y_offset), 
+                                   cv2.FONT_HERSHEY_SIMPLEX, 0.75, status_info['color'], 2, cv2.LINE_AA)
+                        y_offset += 30
+                    else:
+                        # Remove old messages
+                        status_messages.pop(name, None)
 
-                                        # Get current time
-                                        current_time = now()
-
-                                        # Manage attendance based on check-in and check-out logic
-                                        attendance, created = Attendance.objects.get_or_create(employee=employee, date=now().date())
-                                        if created:
-                                            attendance.mark_check_in()
-                                            success_sound.play()
-                                            cv2.putText(frame, f"{name}, checked in.", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
-                                        else:
-                                            if attendance.check_in_time and not attendance.check_out_time:
-                                                # Check out logic: check if 1 minute has passed after check-in
-                                                time_diff = current_time - attendance.check_in_time
-                                                if time_diff.total_seconds() > 60:  # 1 minute after check-in
-                                                    attendance.mark_check_out()
-                                                    success_sound.play()
-                                                    cv2.putText(frame, f"{name}, checked out.", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
-                                                else:
-                                                    cv2.putText(frame, f"{name}, already checked in.", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
-                                            elif attendance.check_in_time and attendance.check_out_time:
-                                                cv2.putText(frame, f"{name}, already checked out.", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
-
-                # Display frame in separate window for each camera
+                # Display frame
                 if not window_created:
                     cv2.namedWindow(window_name)  # Only create window once
                     window_created = True  # Mark window as created
@@ -235,6 +272,38 @@ def capture_and_recognize(request):
                 cap.release()
             if window_created:
                 cv2.destroyWindow(window_name)  # Only destroy if window was created
+
+    def check_attendance_status(name, current_time, success_sound):
+        """Check attendance status and return appropriate message."""
+        try:
+            employees = Employee.objects.filter(name=name)
+            if employees.exists():
+                employee = employees.first()
+
+                # Manage attendance based on check-in and check-out logic
+                attendance, created = Attendance.objects.get_or_create(employee=employee, date=current_time.date())
+                
+                if created:
+                    attendance.mark_check_in()
+                    success_sound.play()
+                    return f"{name}, checked in"
+                else:
+                    if attendance.check_in_time and not attendance.check_out_time:
+                        # Check out logic: check if 1 minute has passed after check-in
+                        time_diff = current_time - attendance.check_in_time
+                        if time_diff.total_seconds() > 60:  # 1 minute after check-in
+                            attendance.mark_check_out()
+                            success_sound.play()
+                            return f"{name}, checked out"
+                        else:
+                            return f"{name}, already checked in"
+                    elif attendance.check_in_time and attendance.check_out_time:
+                        return f"{name}, already checked out"
+            
+            return None
+        except Exception as e:
+            print(f"Error checking attendance for {name}: {e}")
+            return None
 
     try:
         # Get all camera configurations
@@ -262,16 +331,23 @@ def capture_and_recognize(request):
         for stop_event in stop_events:
             stop_event.set()
 
+        # Wait for threads to finish
+        for thread in camera_threads:
+            thread.join(timeout=1.0)
+
         # Ensure all windows are closed in the main thread
         for window in camera_windows:
-            if cv2.getWindowProperty(window, cv2.WND_PROP_VISIBLE) >= 1:  # Check if window exists
-                cv2.destroyWindow(window)
+            try:
+                if cv2.getWindowProperty(window, cv2.WND_PROP_VISIBLE) >= 1:
+                    cv2.destroyWindow(window)
+            except:
+                pass  # Ignore errors if window doesn't exist
 
     # Check if there are any error messages
     if error_messages:
         # Join all error messages into a single string
         full_error_message = "\n".join(error_messages)
-        return render(request, 'error.html', {'error_message': full_error_message})  # Render the error page with message
+        return render(request, 'error.html', {'error_message': full_error_message})
 
     return redirect('emp_attendance_list')
 

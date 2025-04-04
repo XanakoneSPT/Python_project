@@ -76,6 +76,111 @@
         .footer:hover {
             color: #3bb9b3;
         }
+        /* Search by image button */
+        .search-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+        .search-by-image {
+            display: flex;
+            align-items: center;
+            background-color: #4ecdc4;
+            color: #0f1229;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .search-by-image:hover {
+            background-color: #3bb9b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .search-by-image i {
+            margin-right: 8px;
+            font-size: 1.2em;
+        }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        .modal-content {
+            background-color: #1e2546;
+            margin: 10% auto;
+            padding: 25px;
+            border-radius: 1rem;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-title {
+            color: #4ecdc4;
+            font-weight: bold;
+            margin: 0;
+        }
+        .close-modal {
+            color: #4ecdc4;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-modal:hover {
+            color: #3bb9b3;
+        }
+        .upload-area {
+            border: 2px dashed #4ecdc4;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            background-color: rgba(78, 205, 196, 0.1);
+        }
+        .upload-icon {
+            font-size: 48px;
+            color: #4ecdc4;
+            margin-bottom: 10px;
+        }
+        .upload-text {
+            color: #ffffff;
+            margin-bottom: 15px;
+        }
+        .file-input {
+            display: none;
+        }
+        .submit-search {
+            width: 100%;
+            background-color: #4ecdc4;
+            color: #0f1229;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .submit-search:hover {
+            background-color: #3bb9b3;
+        }
         /* Responsive Styles */
         @media only screen and (max-width: 768px) {
             .container {
@@ -90,6 +195,10 @@
             .actions a {
                 padding: 5px 10px;
             }
+            .modal-content {
+                width: 90%;
+                margin: 20% auto;
+            }
         }
         @media only screen and (max-width: 600px) {
             table {
@@ -99,6 +208,12 @@
             }
             h1 {
                 font-size: 18px;
+            }
+            .search-by-image span {
+                display: none;
+            }
+            .search-by-image i {
+                margin-right: 0;
             }
         }
         /* Footer styles */
@@ -120,6 +235,14 @@
 <body>
     <div class="container">
         <h1>Employee List</h1>
+        
+        <div class="search-container">
+            <button class="search-by-image" id="searchByImageBtn">
+                <i class="fas fa-camera"></i>
+                <span>Search by Image</span>
+            </button>
+        </div>
+        
         <table>
             <thead>
                 <tr>
@@ -151,9 +274,93 @@
             </tbody>
         </table>
     </div>
+    
+    <!-- Search by Image Modal -->
+    <div id="searchModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Search Employee by Image</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            {#<!-- <form action="{% url 'search-by-image' %}" method="post" enctype="multipart/form-data"> -->#}
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="upload-area" id="uploadArea">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <p class="upload-text">Click or drag and drop an image here</p>
+                    <p class="upload-text" style="font-size: 14px; color: #b0b7c6;">Supported formats: JPG, PNG</p>
+                    <input type="file" id="imageFile" name="image" class="file-input" accept="image/jpeg, image/png">
+                </div>
+                <button type="submit" class="submit-search">Search</button>
+            </form>
+        </div>
+    </div>
+    
     <!-- Back to home icon -->
     <div class="footer" onclick="location.href='{% url 'home' %}'">
         <i class="fas fa-home"></i> Back to Home
     </div>
+    
+    <!-- Scripts -->
+    <script>
+        // Modal functionality
+        const modal = document.getElementById("searchModal");
+        const btn = document.getElementById("searchByImageBtn");
+        const span = document.getElementsByClassName("close-modal")[0];
+        const uploadArea = document.getElementById("uploadArea");
+        const fileInput = document.getElementById("imageFile");
+        
+        // Open modal
+        btn.onclick = function() {
+            modal.style.display = "block";
+        }
+        
+        // Close modal
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+        
+        // Close modal if clicked outside
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+        
+        // Upload area functionality
+        uploadArea.onclick = function() {
+            fileInput.click();
+        }
+        
+        // Display file name when selected
+        fileInput.onchange = function() {
+            if (fileInput.files.length > 0) {
+                const fileName = fileInput.files[0].name;
+                document.querySelector(".upload-text").textContent = "Selected: " + fileName;
+            }
+        }
+        
+        // Drag and drop functionality
+        uploadArea.addEventListener("dragover", function(e) {
+            e.preventDefault();
+            uploadArea.style.backgroundColor = "rgba(78, 205, 196, 0.2)";
+        });
+        
+        uploadArea.addEventListener("dragleave", function(e) {
+            e.preventDefault();
+            uploadArea.style.backgroundColor = "transparent";
+        });
+        
+        uploadArea.addEventListener("drop", function(e) {
+            e.preventDefault();
+            uploadArea.style.backgroundColor = "transparent";
+            
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                const fileName = e.dataTransfer.files[0].name;
+                document.querySelector(".upload-text").textContent = "Selected: " + fileName;
+            }
+        });
+    </script>
 </body>
 </html>
